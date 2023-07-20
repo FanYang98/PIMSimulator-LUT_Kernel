@@ -22,7 +22,28 @@ using namespace DRAMSim;
 
 TEST_F(PIMBenchFixture, gemv)
 {
-    setPIMBenchTestCase(KernelType::GEMV, 4096, 4096);  // (KernelType, out_vec, in_vec)
+    cout << "input nc, n, num_centroids, out_features" << endl;
+
+    uint32_t nc = 48;
+    uint32_t n = 256;
+    uint32_t num_centroids = 16;
+    uint32_t out_features = 4096;
+
+    cin >> nc;
+    cin >> n;
+    cin >> num_centroids;
+    cin >> out_features;
+
+    cout << "nc: " << nc << endl;
+    cout << "n: " << n << endl;
+    cout << "num_centroids: " << num_centroids << endl;
+    cout << "out_features: " << out_features << endl;
+
+    uint32_t batch = n;
+    uint32_t dim_in = nc*num_centroids;
+    uint32_t dim_out = out_features;
+
+    setPIMBenchTestCase(KernelType::GEMV, dim_out, dim_in, batch);  // (KernelType, out_vec, in_vec)
     executeKernel();                                    // execute w/o PIM
     executePIMKernel();                                 // execute w/ PIM
     expectPIMBench(2.0);

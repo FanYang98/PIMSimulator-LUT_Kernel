@@ -62,16 +62,34 @@ TEST_F(PIMKernelFixture, gemv)
 {
     shared_ptr<PIMKernel> kernel = make_pim_kernel();
 
+    cout << "input nc, n, num_centroids, out_features" << endl;
+    
+    uint32_t nc = 48;
+    uint32_t n = 256;
+    uint32_t num_centroids = 16;
+    uint32_t out_features = 4096;
+
+    cin >> nc;
+    cin >> n;
+    cin >> num_centroids;
+    cin >> out_features;
+
+    cout << "nc: " << nc << endl;
+    cout << "n: " << n << endl;
+    cout << "num_centroids: " << num_centroids << endl;
+    cout << "out_features: " << out_features << endl;
+
     uint32_t batch_size = 1;
-    uint32_t output_dim = 4096;
-    uint32_t input_dim = 1024;
+    uint32_t output_dim = out_features;
+    uint32_t input_dim = nc*num_centroids;
 
     DataDim *dim_data = new DataDim(KernelType::GEMV, batch_size, output_dim, input_dim, true);
+    // init input_npbst_ in dim_data
     dim_data->printDim(KernelType::GEMV);
 
     reduced_result_ = new BurstType[dim_data->dimTobShape(output_dim)];
     result_ = getResultPIM(KernelType::GEMV, dim_data, kernel, result_);
-
+    cout << "end cycles: " << kernel->getCycle() << endl;
     testStatsClear();
     expectAccuracy(KernelType::GEMV, output_dim, dim_data->output_npbst_,
                    dim_data->getNumElementsPerBlocks());
