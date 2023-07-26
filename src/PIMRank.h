@@ -106,6 +106,7 @@ class PIMRank : public SimulatorObject
         return ((r & 0x1) << 2 | ((c >> 3) & 0x3));
     }
 
+    uint32_t pimRankMacNum = 0;
     Rank* rank;
     vector<PIMBlock> pimBlocks;
 };

@@ -88,6 +88,20 @@ class Rank : public SimulatorObject
     unsigned dataCyclesLeft;
     bool refreshWaiting;
 
+    // cmds count
+    uint32_t readNum = 0;
+    uint32_t writeNum = 0;
+    uint32_t activateNum = 0;
+    uint32_t prechargeNum = 0;
+    uint32_t refNum = 0;
+    
+    // gemv only needs to count mac
+    uint32_t macNum = 0;
+
+    // record cycles of all idle banks
+    uint32_t all_idle_cycles = 0;
+    uint32_t rank_active_cycles = 0;
+
     // these are vectors so that each element is per-bank
     vector<BusPacket*> readReturnPacket;
     vector<unsigned> readReturnCountdown;

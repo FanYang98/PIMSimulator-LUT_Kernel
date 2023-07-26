@@ -236,6 +236,19 @@ void MemorySystem::update()
     for (size_t i = 0; i < num_ranks_; i++)
     {
         (*ranks)[i]->update();
+
+        bool all_idle = true;
+
+        for (size_t j = 0; j < config.NUM_BANKS; j++)
+        {
+            if ((*ranks)[i]->bankStates[j].currentBankState != Idle)
+            {
+                all_idle = false;
+            }
+        }
+        
+        if(all_idle) (*ranks)[i]->all_idle_cycles++;
+        else (*ranks)[i]->rank_active_cycles++;
     }
 
     // pendingTransactions will only have stuff in it if MARSS is adding stuff
@@ -254,6 +267,32 @@ void MemorySystem::update()
     memoryController->step();
     this->step();
 
+     // set Nums to 0 to update them in the next 
+    memReadNum = 0;
+    memWriteNum = 0;
+    memActivateNum = 0;
+    memPrechargeNum = 0;
+    memRefNum = 0;
+
+    memMacNum = 0;
+
+    memIdleCycles = 0;
+    memActiveCycles = 0;
+
+    // update memsys count
+    for (size_t i = 0; i < num_ranks_; i++)
+    {
+        memReadNum += (*ranks)[i]->readNum;
+        memWriteNum += (*ranks)[i]->writeNum;
+        memActivateNum += (*ranks)[i]->activateNum;
+        memPrechargeNum += (*ranks)[i]->prechargeNum;
+        memRefNum += (*ranks)[i]->refNum;
+
+        memMacNum += (*ranks)[i]->macNum;
+
+        memIdleCycles += (*ranks)[i]->all_idle_cycles;
+        memActiveCycles += (*ranks)[i]->rank_active_cycles;
+    }
     // PRINT("\n"); // two new lines
 }
 

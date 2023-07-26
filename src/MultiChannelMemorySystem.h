@@ -79,6 +79,20 @@ class MultiChannelMemorySystem : public MemoryObject
     bool willAcceptTransaction(uint64_t addr);
     bool willAcceptTransaction();
 
+    // multi-mem count
+    uint32_t memsReadNum = 0;
+    uint32_t memsWriteNum = 0;
+    uint32_t memsActivateNum = 0;
+    uint32_t memsPrechargeNum = 0;
+    uint32_t memsRefNum = 0;
+
+    uint32_t memsMacNum = 0;
+
+    uint32_t memsAllIdleCycles = 0;
+    uint32_t memsActiveCycles = 0;
+    
+    uint32_t memcycles = 0;
+
     // output file
     std::ofstream visDataOut;
     ofstream dramsimLog;

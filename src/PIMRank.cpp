@@ -426,7 +426,9 @@ void PIMRank::doPIM(BusPacket* packet)
                 else
                     lastRepeatIdx_ = -1;
             }
-
+            
+            pimRankMacNum = 0;
+            
             for (int pimblock_id = 0; pimblock_id < config.NUM_PIM_BLOCKS; pimblock_id++)
             {
                 if (DEBUG_PIM_BLOCK && pimblock_id == 0)
@@ -437,6 +439,8 @@ void PIMRank::doPIM(BusPacket* packet)
                 }
 
                 doPIMBlock(packet, cCmd, pimblock_id);
+                
+                pimRankMacNum += pimBlocks[pimblock_id].pimBlockMacNum;
 
                 if (DEBUG_PIM_BLOCK && pimblock_id == 0)
                 {
@@ -525,4 +529,5 @@ void PIMRank::doPIMBlock(BusPacket* packet, PIMCmd cCmd, int pimblock_id)
             rank->banks[pimblock_id * 2 + 1].write(packet);  // basically read from bank.
         }
     }
+
 }

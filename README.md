@@ -83,6 +83,28 @@ In the end, the results will show in the terminal like:
 ```
 The cycle in `GEMV (PIM enabled)` means the LUT-Kernel performance in certain input.
 
+At the end of terminal, the data related with energy shows like that:
+```
+memsReadNum: 10240
+memsWriteNum: 2752
+memsActivateNum: 3136
+memsPrechargeNum: 3136
+memsRefNum: 0
+memsMacNum: 73728
+memsAllIdleCycles: 104576
+memsActiveCycles: 45056
+background_energy: 0.039967(mJ)
+act_energy: 0.012983(mJ)
+read_energy: 0.041165(mJ)
+write_energy: 0.014696(mJ)
+ref_energy: 0.000000(mJ)
+mac_energy: 1.492255(uJ)
+total_energy: 0.110302(mJ)
+power: 94.356283(J/s)
+```
+
+`total_energy` means the total energy of HBM-PIM on LUT-Kernel, and `power` means HBM-PIM power in LUT-Kernel process.
+
 As well, if you want to get the LUT-Kernel functionality performance, you can type command like that:
 ```
 python3 run_gemv_kernel_test.py --num_codebooks 1 --num_tokens 2 --num_centroids 3 --feature_lens 4

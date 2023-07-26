@@ -374,9 +374,11 @@ void Rank::writeSb(BusPacket* packet)
 
 void Rank::execute(BusPacket* packet)
 {
+    macNum = 0;
     switch (packet->busPacketType)
     {
         case READ:
+            readNum++;
             if (mode_ == dramMode::SB)
                 readSb(packet);
             else if (mode_ == dramMode::HAB_PIM && pimRank->isToggleCond(packet))
@@ -388,6 +390,7 @@ void Rank::execute(BusPacket* packet)
             readReturnCountdown.push_back(config.RL);
             break;
         case WRITE:
+            writeNum++;
             if (mode_ == dramMode::SB)
                 writeSb(packet);
             else if (mode_ == dramMode::HAB_PIM && pimRank->isToggleCond(packet))
@@ -397,6 +400,7 @@ void Rank::execute(BusPacket* packet)
             delete (packet);
             break;
         case ACTIVATE:
+            activateNum++;
             if (DEBUG_CMD_TRACE)
             {
                 PRINTC(getModeColor(), OUTLOG_ALL("ACTIVATE") << " tag : " << packet->tag);
@@ -422,6 +426,7 @@ void Rank::execute(BusPacket* packet)
             delete (packet);
             break;
         case PRECHARGE:
+            prechargeNum++;
             if (DEBUG_CMD_TRACE)
             {
                 if (mode_ == dramMode::SB || packet->bank < 2)
@@ -454,6 +459,7 @@ void Rank::execute(BusPacket* packet)
             break;
 
         case REF:
+            refNum++;
             refreshWaiting = false;
             if (DEBUG_CMD_TRACE)
             {
@@ -471,6 +477,7 @@ void Rank::execute(BusPacket* packet)
             exit(0);
             break;
     }
+    macNum = pimRank->pimRankMacNum;
 }
 
 void Rank::update()

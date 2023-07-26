@@ -351,6 +351,80 @@ void MultiChannelMemorySystem::mkdirIfNotExist(string path)
 
 MultiChannelMemorySystem::~MultiChannelMemorySystem()
 {
+    cout << "memsReadNum: "<<memsReadNum<<endl;
+    cout << "memsWriteNum: "<<memsWriteNum<<endl;
+    cout << "memsActivateNum: "<<memsActivateNum<<endl;
+    cout << "memsPrechargeNum: "<<memsPrechargeNum<<endl;
+    cout << "memsRefNum: "<<memsRefNum<<endl;
+    
+    cout << "memsMacNum: "<<memsMacNum<<endl;
+    
+    cout << "memsAllIdleCycles: "<<memsAllIdleCycles<<endl;
+    cout << "memsActiveCycles: "<<memsActiveCycles<<endl;
+ 
+    // we can calculate energy here
+    // devices: the num of devices in the rank.
+    // uint32_t devices_per_rank = bus_width / device_width; in HBM2 bus_width=128 device_width=128
+    uint32_t devices_per_rank = 1;
+    uint32_t devices = devices_per_rank;
+    // HBM2 https://ieeexplore.ieee.org/document/7565556 config
+    // tRC = tRAS + tRP;
+    // VDD (V)
+    // IDD0 (mA)
+    double VDD = 1.2, IDD0 = 65, tRC = 34 + 14, IDD3N = 55;
+    double tRAS = 34, IDD2N = 40, tRP = 14, IDD4R = 390;
+    double burst_cycle = 2, IDD5AB = 250, tRFC = 260, IDD4W = 500;
+
+    // burst_cycle ? burst_cycle = (BL == 0) ? 0 : BL / 2; BL = 2
+    double act_energy_inc = VDD * (IDD0 * tRC - (IDD3N * tRAS + IDD2N * tRP)) * devices; // V*mA*cycles
+    double read_energy_inc = VDD * (IDD4R - IDD3N) * burst_cycle * devices;
+    double write_energy_inc = VDD * (IDD4W - IDD3N) * burst_cycle * devices;
+    double ref_energy_inc = VDD * (IDD5AB - IDD3N) * tRFC * devices;
+    // refb_energy_inc = VDD * (IDD5PB - IDD3N) * tRFCb * devices;
+    // there are no refb cmds
+
+    // mac energy comes from where ?
+    // in https://ieeexplore.ieee.org/abstract/document/8493536, which tells us a single 8-bit MAC is 161uW
+    // in memsMacNum, the number marks 16 MACs?
+    // in https://ieeexplore.ieee.org/abstract/document/9499894, which can scale it to 16bit
+    // INT8 (w/ 32-bit Acc.) 0.77
+    // FP16 1.21
+    // 161uW -> 253uW
+    // About 5 cycles -> configuration->tCK * 1E-9* 5 = MAC_times = 1 * 1E-9* 5
+    double mac_times = 1 * 1E-9* 5; // mac_time
+    double mac_energy_inc_per_s = 253*16; // uW
+    double mac_energy = mac_energy_inc_per_s * memsMacNum * mac_times; //uJ
+
+    double act_energy = memsActivateNum * act_energy_inc * mac_times; // mJ
+    double read_energy = memsReadNum * read_energy_inc * mac_times;
+    double write_energy = memsWriteNum * write_energy_inc * mac_times;
+    double ref_energy = memsRefNum * ref_energy_inc* mac_times;
+
+
+    // the following are added per cycle
+    double act_stb_energy_inc = VDD * IDD3N * devices;
+    double pre_stb_energy_inc = VDD * IDD2N * devices;
+
+    double pre_stb = memsAllIdleCycles * pre_stb_energy_inc * 1E-9* 5; // mJ
+    double act_stb = memsActiveCycles * act_stb_energy_inc * 1E-9* 5;
+    // background_energy
+    double background_energy = pre_stb + act_stb;
+
+    cout << "background_energy: " << background_energy << "(mJ)" << endl;
+    cout << "act_energy: "<< act_energy << "(mJ)" << endl;
+    cout << "read_energy: "<< read_energy << "(mJ)" << endl;
+    cout << "write_energy: "<< write_energy << "(mJ)" << endl;
+    cout << "ref_energy: "<< ref_energy << "(mJ)" << endl;
+    cout << "mac_energy: "<< mac_energy << "(uJ)" << endl;
+
+    double total_energy = background_energy + act_energy + read_energy + write_energy + ref_energy + mac_energy/1000;
+
+    cout << "total_energy: "<<total_energy<<"(mJ)"<<endl; 
+
+    double power = (total_energy / (memcycles * 1E-9 * 1)); // mJ/s
+
+    cout << "power: " << power/1000 << "(J/s)" << endl; 
+
     // delete clockDomainCrosser;
     delete csvOut;
     delete[] numFence;
@@ -402,10 +476,33 @@ void MultiChannelMemorySystem::actual_update()
         csvOut->finalize();
     }
 
+    memsReadNum = 0;
+    memsWriteNum = 0;
+    memsActivateNum = 0;
+    memsPrechargeNum = 0;
+    memsRefNum = 0;
+
+    memsMacNum = 0;
+
+    memsAllIdleCycles = 0;
+    memsActiveCycles = 0;
+
     for (size_t i = 0; i < configuration->NUM_CHANS; i++)
-    {
+    {   
         channels[i]->update();
+        memsReadNum += channels[i]->memReadNum;
+        memsWriteNum += channels[i]->memWriteNum;
+        memsActivateNum += channels[i]->memActivateNum;
+        memsPrechargeNum += channels[i]->memPrechargeNum;
+        memsRefNum += channels[i]->memRefNum;
+        
+        memsMacNum += channels[i]->memMacNum;
+
+        memsAllIdleCycles += channels[i]->memIdleCycles;
+        memsActiveCycles += channels[i]->memActiveCycles;
     }
+    
+    memcycles++;
 
     currentClockCycle++;
 }

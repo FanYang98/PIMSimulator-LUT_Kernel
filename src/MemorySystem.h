@@ -89,6 +89,20 @@ class MemorySystem : public MemoryObject
     unsigned systemID;
     uint64_t numOnTheFlyTransactions;
 
+    // cmds count
+    uint32_t memReadNum = 0;
+    uint32_t memWriteNum = 0;
+    uint32_t memActivateNum = 0;
+    uint32_t memPrechargeNum = 0;
+    uint32_t memRefNum = 0;
+
+    // mem mac count
+    uint32_t memMacNum = 0;
+
+    // mem idle/active cycles
+    uint32_t memIdleCycles = 0;
+    uint32_t memActiveCycles = 0;
+    
   private:
     CSVWriter& csvOut;
     ostream& dramsimLog;

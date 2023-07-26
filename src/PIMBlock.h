@@ -40,6 +40,8 @@ class PIMBlock
     BurstType mOut;
     BurstType aOut;
 
+    uint32_t pimBlockMacNum = 0;
+
     void add(BurstType& dstBst, BurstType& src0Bst, BurstType& src1Bst);
     void mac(BurstType& dstBst, BurstType& src0Bst, BurstType& src1Bst);
     void mul(BurstType& dstBst, BurstType& src0Bst, BurstType& src1Bst);
